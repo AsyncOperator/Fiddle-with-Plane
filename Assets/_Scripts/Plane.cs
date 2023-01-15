@@ -62,7 +62,7 @@ public class Plane : MonoBehaviour {
                 Debug.DrawRay( ray.origin, ray.direction * 100f, Color.white );
             }
             else {
-                Debug.DrawRay( ray.origin, ray.direction * Mathf.Abs( signDistance ), Color.red );
+                Debug.DrawRay( ray.origin, ray.direction * signDistance, Color.red );
             }
         }
 
