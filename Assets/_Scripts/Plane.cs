@@ -23,6 +23,11 @@ public class Plane : MonoBehaviour {
 
         UnityEngine.Plane plane = new( transform.forward, transform.position );
         return plane.ClosestPointOnPlane( sphereTf.position );
+
+        /*
+         * Dont forget that direction vector that is from plane.ClosestPointOnPlane( sphereTf.position )
+         * to sphereTf.position is always same as plane's normal vector
+         */
     }
 
     private float DistanceToPoint() {
@@ -40,6 +45,33 @@ public class Plane : MonoBehaviour {
          */
     }
 
+    private void PlaneRaycast() {
+        if ( sphereTf == null )
+            return;
+
+        Ray ray = new( sphereTf.position, sphereTf.forward );
+
+        UnityEngine.Plane plane = new( transform.forward, transform.position );
+        bool hitInfo = plane.Raycast( ray, out float signDistance );
+
+        if ( hitInfo ) {
+            Debug.DrawRay( ray.origin, ray.direction * signDistance, Color.green );
+        }
+        else {
+            if ( Mathf.Approximately( signDistance, 0f ) ) {
+                Debug.DrawRay( ray.origin, ray.direction * 100f, Color.white );
+            }
+            else {
+                Debug.DrawRay( ray.origin, ray.direction * Mathf.Abs( signDistance ), Color.red );
+            }
+        }
+
+        /*
+         * This function sets enter to the distance along the ray, where it intersects the plane. If the ray is parallel to the plane, function returns false and sets enter to zero.
+         * If the ray is pointing in the opposite direction than the plane, function returns false/ and sets enter to the distance along the ray (negative value).
+         */
+    }
+
     private void OnDrawGizmos() {
         Vector3 size = new( planeSize, planeSize, 0f );
 
@@ -49,6 +81,7 @@ public class Plane : MonoBehaviour {
         }
 
         Vector3 closestPoint = ClosestPoint();
+        PlaneRaycast();
 
 #if UNITY_EDITOR
         Handles.matrix = transform.localToWorldMatrix;
