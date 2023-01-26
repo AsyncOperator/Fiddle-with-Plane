@@ -1,11 +1,25 @@
 using UnityEngine;
+using TMPro;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 
 public class Plane : MonoBehaviour {
+    [Header( "Target" )]
     [SerializeField] private Transform sphereTf;
 
+    [Space( 10 )]
+
+    #region Helper Canvas
+    [Header( "Helper Texts" )]
+    [SerializeField] private TextMeshProUGUI getSideTmp;
+    [SerializeField] private TextMeshProUGUI closestPointTmp;
+    [SerializeField] private TextMeshProUGUI distanceToPointTmp;
+    #endregion
+
+    [Space( 10 )]
+
+    [Header( "Visual Settings" )]
     [Range( 0f, 1f ), SerializeField] private float faceColorAlpha;
     [Range( 100f, 1000f ), SerializeField] private float planeSize;
 
@@ -14,28 +28,43 @@ public class Plane : MonoBehaviour {
             return default;
 
         UnityEngine.Plane plane = new( transform.forward, transform.position );
-        return plane.GetSide( sphereTf.position ) ? Color.green : Color.red;
+        bool side = plane.GetSide( sphereTf.position );
+        Color color = side ? Color.green : Color.red;
+
+        getSideTmp?.SetText( $"GetSide: {side}" );
+
+        return color;
     }
 
     private Vector3 ClosestPoint() {
+        Vector3 closestPoint = default;
         if ( sphereTf == null )
-            return default;
+            return closestPoint;
 
         UnityEngine.Plane plane = new( transform.forward, transform.position );
-        return plane.ClosestPointOnPlane( sphereTf.position );
+        closestPoint = plane.ClosestPointOnPlane( sphereTf.position );
+
+        closestPointTmp?.SetText( $"ClosestPoint: {closestPoint}" );
+
+        return closestPoint;
 
         /*
-         * Dont forget that direction vector that is from plane.ClosestPointOnPlane( sphereTf.position )
+         * The direction vector that is from plane.ClosestPointOnPlane( sphereTf.position )
          * to sphereTf.position is always same as plane's normal vector
          */
     }
 
     private float DistanceToPoint() {
+        float distanceToPoint = default;
         if ( sphereTf == null )
-            return default;
+            return distanceToPoint;
 
         UnityEngine.Plane plane = new( transform.forward, transform.position );
-        return plane.GetDistanceToPoint( sphereTf.position );
+        distanceToPoint = plane.GetDistanceToPoint( sphereTf.position );
+
+        distanceToPointTmp?.SetText( $"GetDistanceToPoint: {distanceToPoint}" );
+
+        return distanceToPoint;
 
         /*
          * Same as
@@ -65,7 +94,6 @@ public class Plane : MonoBehaviour {
                 Debug.DrawRay( ray.origin, ray.direction * signDistance, Color.red );
             }
         }
-
         /*
          * This function sets enter to the distance along the ray, where it intersects the plane. If the ray is parallel to the plane, function returns false and sets enter to zero.
          * If the ray is pointing in the opposite direction than the plane, function returns false/ and sets enter to the distance along the ray (negative value).
@@ -75,19 +103,18 @@ public class Plane : MonoBehaviour {
     private void OnDrawGizmos() {
         Vector3 size = new( planeSize, planeSize, 0f );
 
-        Color faceColor = default;
-        if ( sphereTf != null ) {
-            faceColor = GetSide();
-        }
-
         Vector3 closestPoint = ClosestPoint();
+        _ = DistanceToPoint();
         PlaneRaycast();
 
 #if UNITY_EDITOR
         Handles.matrix = transform.localToWorldMatrix;
-        Handles.DrawSolidRectangleWithOutline( new Rect( position: -size * 0.5f, size ), faceColor.A( faceColorAlpha ), Color.black );
+        //Handles.color = Color
+        Handles.DrawSolidRectangleWithOutline( new Rect( position: -size * 0.5f, size ), GetSide().A( faceColorAlpha ), Color.black );
 
         Handles.DrawDottedLine( transform.InverseTransformPoint( sphereTf.position ), transform.InverseTransformPoint( closestPoint ), 2f );
+
+        Handles.color = Color.blue;
         Handles.DrawSolidDisc( transform.InverseTransformPoint( closestPoint ), Vector3.forward, radius: 2f );
 #endif
     }
